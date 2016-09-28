@@ -4,7 +4,7 @@ those who have recently switched to another development machine and need quick a
 
 #How to use
 
-Place `github_repo_cloner.rb` into the folder where you wish to store your repositories. Then call `ruby github_repo_cloner.rb`
+Place `github_repo_cloner.rb` or `github_repo_cloner.py` into the folder where you wish to store your repositories. Then call `ruby github_repo_cloner.rb` or `python github_repo_cloner.rb`
 from your terminal.
 
 A prompt will appear asking for a github account name. Provide it with the username of the account you wish to clone from.
