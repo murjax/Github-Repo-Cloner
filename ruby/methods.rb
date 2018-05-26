@@ -13,30 +13,64 @@ def connection?
   Net::Ping::HTTP.new("https://api.github.com").ping?
 end
 
-def user_exists(account_name)
-  JSON.parse(Net::HTTP.get(URI.parse("https://api.github.com/users/#{account_name}")))["message"].nil?
+def github_url(account_name)
+  "https://api.github.com/users/#{account_name}"
+end
+
+def user_exists?(account_name)
+  if github_response(account_name)['message'].nil?
+    true
+  else
+    puts user_missing_error
+    false
+  end
+end
+
+def github_response(account_name)
+  uri = URI.parse(github_url(account_name))
+  response = Net::HTTP.get(uri)
+  response_hash = JSON.parse(response)
+end
+
+def repositories(account_name, page)
+  uri = URI.parse("#{github_url(account_name)}/repos?page=#{page}")
+  response = Net::HTTP.get(uri)
+  JSON.parse(response)
+end
+
+def clone_repository(repo)
+  git = Git.clone(repo["clone_url"], repo["name"], :path => "my_repositories")
+  git.add_remote("originate", repo["clone_url"])
+  puts repo["clone_url"]
+end
+
+def number_of_pages(account_name)
+  (github_response(account_name)['public_repos']/30.to_f).ceil
+end
+
+def repositories_exist?(account_name, page)
+  if repositories(account_name, page).count > 0
+    true
+  else
+    puts no_repositories_error
+    false
+  end
+end
+
+def user_missing_error
+  'Account does not exist'
+end
+
+def no_repositories_error
+  'No repositories found at this account'
 end
 
 def clone_repositories(account_name)
-  if user_exists(account_name)
-    num_repos = JSON.parse(Net::HTTP.get(URI.parse("https://api.github.com/users/#{account_name}")))
-    num_pages = (num_repos["public_repos"]/30.to_f).ceil
-    i = 1 # starting at one because page=0 and page=1 are identical.
-    while(i <= num_pages)
-      repositories = JSON.parse(Net::HTTP.get(URI.parse("https://api.github.com/users/#{account_name}/repos?page=#{i}")))
-      if repositories.count > 0
-	puts i # leave this in here for visibility. If user exceeds api limit. need to know where they left off.
-	repositories.each do |repo|
-	  git = Git.clone(repo["clone_url"], repo["name"], :path => "my_repositories")
-	  git.add_remote("originate", repo["clone_url"])
-	  puts repo["clone_url"]
-	end
-      else
-	puts "No repositories found at this account"
-      end
-      i+=1
-    end
-  else
-    puts 'Account does not exist'
+  return unless user_exists?(account_name)
+  number_of_pages(account_name).times do |index|
+    page = index + 1 # starting at one because page=0 and page=1 are identical.
+    next unless repositories_exist?(account_name, page)
+    puts page # leave this in here for visibility. If user exceeds api limit. need to know where they left off.
+    repositories(account_name, page).each { |repo| clone_repository(repo) }
   end
 end
