@@ -1,13 +1,7 @@
 require_relative 'methods.rb'
-account_name = get_account_name
+
 if connection?
-	if user_exists(account_name)
-		clone_repositories(account_name)
-	else
-		puts "Account does not exist"
-	end
+  clone_repositories(get_account_name)
 else
-	puts "network error"
+  puts 'network error'
 end
-
-
