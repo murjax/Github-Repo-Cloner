@@ -137,4 +137,13 @@ describe 'GithubRepoHandler' do
       end
     end
   end
+
+  describe 'parse_response' do
+    it 'parses JSON API response into hash' do
+      username = 'murjax'
+      url = "https://api.github.com/users/#{username}"
+      response = github_repo_handler.parse_response(url)
+      expect(response['login']).to eq(username)
+    end
+  end
 end

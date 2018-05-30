@@ -18,12 +18,9 @@ class GithubRepoHandler
   end
 
   def connection?
-    if Net::Ping::HTTP.new('https://api.github.com').ping?
-      true
-    else
-      puts Error.network_error
-      false
-    end
+    result = Net::Ping::HTTP.new('https://api.github.com').ping?
+    puts Error.network_error unless result
+    result
   end
 
   def github_url
@@ -31,22 +28,21 @@ class GithubRepoHandler
   end
 
   def github_response
-    uri = URI.parse(github_url)
-    response = Net::HTTP.get(uri)
-    response_hash = JSON.parse(response)
+    parse_response(github_url)
   end
 
   def user_exists?
-    if github_response['message'].nil?
-      true
-    else
-      puts Error.user_missing_error
-      false
-    end
+    result = github_response['message'].nil?
+    puts Error.user_missing_error unless result
+    result
   end
 
   def repositories(page)
-    uri = URI.parse("#{github_url}/repos?page=#{page}")
+    parse_response("#{github_url}/repos?page=#{page}")
+  end
+
+  def parse_response(url)
+    uri = URI.parse(url)
     response = Net::HTTP.get(uri)
     JSON.parse(response)
   end
@@ -58,12 +54,9 @@ class GithubRepoHandler
   end
 
   def repositories_exist?(page)
-    if repositories(page).count > 0
-      true
-    else
-      puts Error.no_repositories_error
-      false
-    end
+    result = repositories(page).count > 0
+    puts Error.no_repositories_error unless result
+    result
   end
 
   def clone_repositories
