@@ -2,6 +2,7 @@ require 'net/https'
 require 'json'
 require 'git'
 require 'net/ping'
+require_relative 'error'
 
 class GithubRepoHandler
   attr_reader :account_name
@@ -20,7 +21,7 @@ class GithubRepoHandler
     if Net::Ping::HTTP.new('https://api.github.com').ping?
       true
     else
-      puts network_error
+      puts Error.network_error
       false
     end
   end
@@ -39,21 +40,9 @@ class GithubRepoHandler
     if github_response['message'].nil?
       true
     else
-      puts user_missing_error
+      puts Error.user_missing_error
       false
     end
-  end
-
-  def network_error
-    'Network error'
-  end
-
-  def user_missing_error
-    'Account does not exist'
-  end
-
-  def no_repositories_error
-    'No repositories found at this account'
   end
 
   def repositories(page)
@@ -72,7 +61,7 @@ class GithubRepoHandler
     if repositories(page).count > 0
       true
     else
-      puts no_repositories_error
+      puts Error.no_repositories_error
       false
     end
   end

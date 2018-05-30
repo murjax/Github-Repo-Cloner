@@ -18,7 +18,7 @@ describe 'GithubRepoHandler' do
   describe 'connection?' do
     context 'successful ping to github' do
       it 'is true' do
-	expect_any_instance_of(GithubRepoHandler).not_to receive(:network_error)
+	expect(Error).not_to receive(:network_error)
 	expect(github_repo_handler.connection?).to eq(true)
       end
     end
@@ -26,7 +26,7 @@ describe 'GithubRepoHandler' do
     context 'unsuccessful ping to github' do
       it 'is false' do
 	expect_any_instance_of(Net::Ping::HTTP).to receive(:ping?).and_return(false)
-	expect_any_instance_of(GithubRepoHandler).to receive(:network_error)
+	expect(Error).to receive(:network_error)
 	expect(github_repo_handler.connection?).to eq(false)
       end
     end
@@ -49,31 +49,10 @@ describe 'GithubRepoHandler' do
     end
   end
 
-  describe 'user_missing_error' do
-    it 'returns error string' do
-      error = 'Account does not exist'
-      expect(github_repo_handler.user_missing_error).to eq(error)
-    end
-  end
-
-  describe 'no_repositories_error' do
-    it 'returns error string' do
-      error = 'No repositories found at this account'
-      expect(github_repo_handler.no_repositories_error).to eq(error)
-    end
-  end
-
-  describe 'network_error' do
-    it 'returns error string' do
-      error = 'Network error'
-      expect(github_repo_handler.network_error).to eq(error)
-    end
-  end
-
   describe 'user_exists?' do
     context 'user exists' do
       it 'is true' do
-	expect_any_instance_of(GithubRepoHandler).not_to receive(:user_missing_error)
+	expect(Error).not_to receive(:user_missing_error)
 	expect(github_repo_handler.user_exists?).to eq(true)
       end
     end
@@ -81,7 +60,7 @@ describe 'GithubRepoHandler' do
     context 'user does not exist' do
       let(:account_name) { 'lllllllllllllllllllllllllllllllllllllllll' }
       it 'is false' do
-	expect_any_instance_of(GithubRepoHandler).to receive(:user_missing_error)
+	expect(Error).to receive(:user_missing_error)
 	expect(github_repo_handler.user_exists?).to eq(false)
       end
     end
@@ -119,7 +98,7 @@ describe 'GithubRepoHandler' do
     describe 'repositories do not exist' do
       it 'is false' do
 	expect_any_instance_of(GithubRepoHandler).to receive(:repositories).and_return([])
-	expect_any_instance_of(GithubRepoHandler).to receive(:no_repositories_error)
+	expect(Error).to receive(:no_repositories_error)
 	expect(github_repo_handler.repositories_exist?(page)).to eq(false)
       end
     end
