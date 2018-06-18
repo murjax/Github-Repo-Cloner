@@ -2,10 +2,19 @@
 This Ruby script clones a given user's repositories from Github and sets up remotes for each one. This is convenient for 
 those who have recently switched to another development machine and need quick access to their projects.
 
-#How to use
+# How to use
 
-Place `github_repo_cloner.rb` or `github_repo_cloner.py` into the folder where you wish to store your repositories. Then call `ruby github_repo_cloner.rb` or `python github_repo_cloner.rb`
+Place `github_repo_cloner.rb` or `github_repo_cloner.py` into the folder where you wish to store your repositories. 
+<br/>Then call `ruby github_repo_cloner.rb` or `python github_repo_cloner.rb`
 from your terminal.
+
+## To run from inside this project:
+```ruby
+bundle install; 
+cd ruby; 
+ruby github_repo_cloner.rb
+# your files will be located inside my_repositories folder.
+```
 
 A prompt will appear asking for a github account name. Provide it with the username of the account you wish to clone from.
 
