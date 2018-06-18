@@ -1,0 +1,5 @@
+source 'https://rubygems.org'
+gem 'net-ping'
+gem 'git'
+gem 'json'
+gem 'net'
