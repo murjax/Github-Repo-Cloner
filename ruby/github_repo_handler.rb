@@ -7,6 +7,7 @@ require_relative 'error'
 class GithubRepoHandler
   attr_reader :account_name
 
+# **********         Object creation logic.             **********
   def initialize
     @account_name = get_account_name
   end
@@ -17,34 +18,32 @@ class GithubRepoHandler
     STDIN.gets.chomp
   end
 
+# **********         Main clone repository logic.       **********
+  def clone_repositories
+    return unless connection? && user_exists?
+
+    calulate_number_of_requests_to_send().times do |index|
+      response_page_logic(index+1)  # starting at one because page=0 and page=1 are identical.
+    end
+  end
+
   def connection?
     result = Net::Ping::HTTP.new('https://api.github.com').ping?
     puts Error.network_error unless result
     result
   end
 
-  def github_url
-    "https://api.github.com/users/#{account_name}"
-  end
-
-  def github_response
-    parse_response(github_url)
-  end
-
   def user_exists?
-    result = github_response['message'].nil?
+    result = github_user_info_request()['message'].nil?
     puts Error.user_missing_error unless result
     result
   end
 
-  def repositories(page)
-    parse_response("#{github_url}/repos?page=#{page}")
-  end
+  def response_page_logic(page_number)
+    return unless repositories_exist?(page_number)
 
-  def parse_response(url)
-    uri = URI.parse(url)
-    response = Net::HTTP.get(uri)
-    JSON.parse(response)
+    puts "api request ##{page_number}" # leave this in here for visibility. If user exceeds api limit. need to know where they left off.
+    github_repo_request(page_number).each { |repo| clone_repository(repo) }
   end
 
   def clone_repository(repo)
@@ -54,24 +53,24 @@ class GithubRepoHandler
   end
 
   def repositories_exist?(page)
-    result = repositories(page).count > 0
+    result = github_repo_request(page).count > 0
     puts Error.no_repositories_error unless result
     result
   end
 
-  def clone_repositories
-    return unless connection? && user_exists?
-    number_of_pages.times do |index|
-      page = index + 1 # starting at one because page=0 and page=1 are identical.
-      next unless repositories_exist?(page)
-      puts page # leave this in here for visibility. If user exceeds api limit. need to know where they left off.
-      repositories(page).each { |repo| clone_repository(repo) }
-    end
+
+  # **********         Api request logic.              **********
+  private def calulate_number_of_requests_to_send()
+    (github_user_info_request()['public_repos']/30.to_f).ceil
+  end
+  def github_user_info_request()         parse_response(github_url) end
+  def github_repo_request(page) parse_response("#{github_url}/repos?page=#{page}") end
+  def github_url() "https://api.github.com/users/#{account_name}" end
+
+  def parse_response(url)
+    uri = URI.parse(url)
+    response = Net::HTTP.get(uri)
+    JSON.parse(response)
   end
 
-  private
-
-    def number_of_pages
-      (github_response['public_repos']/30.to_f).ceil
-    end
 end
