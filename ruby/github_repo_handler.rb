@@ -3,11 +3,18 @@ require 'json'
 require 'git'
 require 'net/ping'
 require_relative 'error'
+require_relative 'github_api.rb'
+  # github_calulate_number_of_requests_to_send, github_user_info_request, github_repo_request, github_url
+  # connection?, user_exists?, repositories_exist?
+require_relative 'local_system.rb'
+  # clone_repository
 
 class GithubRepoHandler
   attr_reader :account_name
+  include Github
+  include LocalSystem
 
-# **********         Object creation logic.             **********
+  # **********         Object creation logic.             **********
   def initialize
     @account_name = get_account_name
   end
@@ -18,11 +25,11 @@ class GithubRepoHandler
     STDIN.gets.chomp
   end
 
-# **********         Main clone repository logic.       **********
+  # **********         Main clone repository logic.       **********
   def clone_repositories
     return unless connection? && user_exists?
 
-    calulate_number_of_requests_to_send().times do |index|
+    github_calulate_number_of_requests_to_send().times do |index|
       current_api_page_num = human_count(index)
       response_page_logic(current_api_page_num)
     end
@@ -51,33 +58,6 @@ class GithubRepoHandler
 
     puts "api request ##{page_number}" # leave this in here for visibility. If user exceeds api limit. need to know where they left off.
     github_repo_request(page_number).each { |repo| clone_repository(repo) }
-  end
-
-  def clone_repository(repo)
-    git = Git.clone(repo['clone_url'], repo['name'], path: 'my_repositories')
-    git.add_remote('originate', repo['clone_url'])
-    puts repo["clone_url"]
-  end
-
-  def repositories_exist?(page)
-    result = github_repo_request(page).count > 0
-    puts Error.no_repositories_error unless result
-    result
-  end
-
-
-  # **********         Api request logic.              **********
-  private def calulate_number_of_requests_to_send()
-    (github_user_info_request()['public_repos']/30.to_f).ceil
-  end
-  def github_user_info_request()         parse_response(github_url) end
-  def github_repo_request(page) parse_response("#{github_url}/repos?page=#{page}") end
-  def github_url() "https://api.github.com/users/#{account_name}" end
-
-  def parse_response(url)
-    uri = URI.parse(url)
-    response = Net::HTTP.get(uri)
-    JSON.parse(response)
   end
 
 end
