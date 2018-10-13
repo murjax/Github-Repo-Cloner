@@ -1,0 +1,7 @@
+language: ruby
+rvm:
+  - 2.3.3
+script:
+  - "cd ruby"
+  - "bundle"
+  - "bundle exec rspec spec"
