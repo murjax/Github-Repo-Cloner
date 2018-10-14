@@ -7,7 +7,6 @@ require_relative 'error'
 class GithubRepoHandler
   attr_reader :account_name
 
-# **********         Object creation logic.             **********
   def initialize
     @account_name = get_account_name
   end
@@ -18,7 +17,6 @@ class GithubRepoHandler
     STDIN.gets.chomp
   end
 
-# **********         Main clone repository logic.       **********
   def clone_repositories
     return unless connection? && user_exists?
 
@@ -59,18 +57,25 @@ class GithubRepoHandler
   end
 
 
-  # **********         Api request logic.              **********
-  private def calulate_number_of_requests_to_send()
+  private def calulate_number_of_requests_to_send
     (github_user_info_request()['public_repos']/30.to_f).ceil
   end
-  def github_user_info_request()         parse_response(github_url) end
-  def github_repo_request(page) parse_response("#{github_url}/repos?page=#{page}") end
-  def github_url() "https://api.github.com/users/#{account_name}" end
+
+  def github_user_info_request
+    parse_response(github_url)
+  end
+
+  def github_repo_request(page)
+    parse_response("#{github_url}/repos?page=#{page}")
+  end
+
+  def github_url
+    "https://api.github.com/users/#{account_name}"
+  end
 
   def parse_response(url)
     uri = URI.parse(url)
     response = Net::HTTP.get(uri)
     JSON.parse(response)
   end
-
 end
