@@ -39,10 +39,10 @@ describe 'GithubRepoHandler' do
     end
   end
 
-  describe 'github_response' do
+  describe 'github_user_info_request' do
     let(:account_name) { 'murjax' }
     it 'returns github response on user account' do
-      response = github_repo_handler.github_response
+      response = github_repo_handler.github_user_info_request
       expect(response['login']).to eq(account_name)
       expect(response['name']).to eq('Ryan Murphy')
       expect(response['id']).to eq(14116496)
@@ -71,7 +71,7 @@ describe 'GithubRepoHandler' do
     let(:page) { 1 }
 
     it 'returns response of user repo data' do
-      response = github_repo_handler.repositories(page)
+      response = github_repo_handler.github_repo_request(page)
       expect(response.first['id']).to eq(97072612)
       expect(response.first['name']).to eq('actionchat')
     end
@@ -90,14 +90,14 @@ describe 'GithubRepoHandler' do
     let(:page) { 1 }
     describe 'repositories exist' do
       it 'is true' do
-	expect_any_instance_of(GithubRepoHandler).to receive(:repositories).and_return([1])
+	expect_any_instance_of(GithubRepoHandler).to receive(:github_repo_request).and_return([1])
 	expect(github_repo_handler.repositories_exist?(page)).to eq(true)
       end
     end
 
     describe 'repositories do not exist' do
       it 'is false' do
-	expect_any_instance_of(GithubRepoHandler).to receive(:repositories).and_return([])
+	expect_any_instance_of(GithubRepoHandler).to receive(:github_repo_request).and_return([])
 	expect(Error).to receive(:no_repositories_error)
 	expect(github_repo_handler.repositories_exist?(page)).to eq(false)
       end
@@ -108,7 +108,7 @@ describe 'GithubRepoHandler' do
     context 'no account' do
       let(:account_name) { 'lllllllllllllllllllllllllllllllllllllllll' }
       it 'does not clone repos' do
-	expect_any_instance_of(GithubRepoHandler).not_to receive(:repositories)
+	expect_any_instance_of(GithubRepoHandler).not_to receive(:github_repo_request)
 	github_repo_handler.clone_repositories
       end
     end
