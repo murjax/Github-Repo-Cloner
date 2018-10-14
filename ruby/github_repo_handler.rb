@@ -23,8 +23,15 @@ class GithubRepoHandler
     return unless connection? && user_exists?
 
     calulate_number_of_requests_to_send().times do |index|
-      response_page_logic(index+1)  # starting at one because page=0 and page=1 are identical.
+      current_api_page_num = human_count(index)
+      response_page_logic(current_api_page_num)
     end
+  end
+
+  def human_count(index)
+    # online api's count start counting at 1.
+    # human_count() is a count starting at 1 instead of 0.
+    index+1
   end
 
   def connection?
