@@ -7,8 +7,8 @@ class GithubRepos
   end
 
   def all
-    number_of_pages.map do |index|
-      repos_on_page(index + 1).map { |repo| items.push(repo) }
+    number_of_pages.times.map do |index|
+      repos_on_page(index + 1)
     end.flatten
   end
 

@@ -1,4 +1,5 @@
 require_relative 'error'
+require_relative 'response_handler'
 class GithubAccount
   include ResponseHandler
 
@@ -12,7 +13,7 @@ class GithubAccount
   end
 
   def exists?
-    response = parse_response(account_url)
+    response = parse_response(url)
     result = response['message'].nil?
     puts Error.user_missing_error unless result
     result
