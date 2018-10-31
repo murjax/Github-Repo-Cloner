@@ -13,7 +13,7 @@ class GithubAccount
   end
 
   def exists?
-    response = parse_response(url)
+    response = handle_request(url)
     result = response['message'].nil?
     puts Error.user_missing_error unless result
     result

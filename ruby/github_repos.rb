@@ -15,12 +15,12 @@ class GithubRepos
   private
 
   def repos_on_page(page)
-    parse_response("#{github_account.url}/repos?page=#{page}")
+    handle_request("#{github_account.url}/repos?page=#{page}")
   end
 
   def number_of_pages
     return [] unless github_account.exists?
-    response = parse_response(github_account.url)
+    response = handle_request(github_account.url)
     (response['public_repos']/30.to_f).ceil
   end
 end
