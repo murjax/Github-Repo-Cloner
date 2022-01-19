@@ -6,7 +6,7 @@ those who have recently switched to another development machine and need quick a
 
 Place `github_repo_cloner.rb` or `github_repo_cloner.py` into the folder where you wish to store your repositories. 
 <br/>Then call `ruby github_repo_cloner.rb` or `python github_repo_cloner.rb`
-from your terminal.
+from your terminal. Test
 
 ## To run from inside this project:
 ```ruby
