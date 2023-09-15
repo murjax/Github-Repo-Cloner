@@ -2,19 +2,18 @@ defmodule GithubRepoCloner.Cloner do
   @http_client Application.compile_env(:github_repo_cloner, :http_client)
   @system Application.compile_env(:github_repo_cloner, :system)
 
-  def clone(nil), do: true
+  def clone_page(%{username: nil}), do: {:error, "No repositories found"}
+  def clone_page(%{page: nil}), do: {:error, "No repositories found"}
 
-  def clone(username) do
+  def clone_page(%{username: username, page: page}) do
     username
-    |> request_repo_info
+    |> request_repo_info(page)
     |> parse_response
     |> clone_repos(username)
   end
 
-  def clone, do: true
-
-  defp request_repo_info(username) do
-    @http_client.get("https://api.github.com/users/#{username}/repos")
+  defp request_repo_info(username, page) do
+    @http_client.get("https://api.github.com/users/#{username}/repos?page=#{page}")
   end
 
   defp parse_response({:ok, %Tesla.Env{status: 200, body: body}}) do
@@ -30,7 +29,11 @@ defmodule GithubRepoCloner.Cloner do
     |> run_command
   end
 
+  defp run_command("") do
+    {:error, "No repositories found"}
+  end
+
   defp run_command(command) do
-    @system.cmd("sh", ["-c", command])
+    {:ok, @system.cmd("sh", ["-c", command])}
   end
 end
