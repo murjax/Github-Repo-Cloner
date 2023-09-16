@@ -1,5 +1,3 @@
-time (mkdir splunking; cd splunking; echo ; curl -s https://api.github.com/users/michaeldimmitt/repos | jq -c '.[]' | while read i; do val=$(jq -r '.clone_url' <<< "$i"); (git clone -q $val) &> /dev/null & done; echo -n loading; while echo -n .; ps e | grep -v grep | grep git > /dev/null; do sleep 1; done; echo ;)
-
 ## Links
 
 # interogate json with jq
@@ -14,6 +12,39 @@ time (mkdir splunking; cd splunking; echo ; curl -s https://api.github.com/users
 # https://unix.stackexchange.com/a/461813/188491
 # main () { echo running ... }; time main
 
+ask() {
+  echo "Please enter account_name (user/organization name)";
+  read temp;
+  echo ;
+  echo "You entered $temp";
+}
 
+first() {
+  mkdir splunking &&
+  cd splunking &&
+  echo
+}
 
+second () {
+  curl -s https://api.github.com/users/michaeldimmitt/repos | jq -c '.[]' |
+
+  while read i;
+  do
+    val=$(jq -r '.clone_url' <<< "$i");
+    (git clone -q $val) &> /dev/null & 
+  done;
+
+  echo -n loading;
+
+  while
+    echo -n .;
+    ps e | grep -v grep | grep git > /dev/null;
+  do
+    sleep 1;
+  done;
+
+  echo ;
+}
+
+ask && first && time second
 
