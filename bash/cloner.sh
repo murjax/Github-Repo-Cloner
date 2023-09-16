@@ -14,19 +14,19 @@
 
 ask() {
   echo "Please enter account_name (user/organization name)";
-  read temp;
+  read account_name;
   echo ;
-  echo "You entered $temp";
+  echo "You entered $account_name";
 }
 
 first() {
-  mkdir splunking &&
-  cd splunking &&
+  mkdir $account_name &&
+  cd $account_name &&
   echo
 }
 
 second () {
-  curl -s https://api.github.com/users/michaeldimmitt/repos | jq -c '.[]' |
+  curl -s https://api.github.com/users/$account_name/repos | jq -c '.[]' |
 
   while read i;
   do
