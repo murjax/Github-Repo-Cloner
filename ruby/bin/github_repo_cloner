@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
 
-require_relative '../lib/clone_handler'
+require_relative '../lib/clone_all_handler'
 
-CloneHandler.new(ARGV.first).call
+CloneAllHandler.new(ARGV.first).call

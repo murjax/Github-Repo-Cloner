@@ -1,20 +1,21 @@
-require 'clone_handler'
+require 'clone_page_handler'
 require 'json'
 require 'net/http'
 
-RSpec.describe CloneHandler do
+RSpec.describe ClonePageHandler do
   describe '#call' do
     let(:username) { 'murjax' }
+    let(:page) { 2 }
     let(:clone_url1) { 'https://github.com/murjax/spring_engine.git' }
     let(:clone_url2) { 'https://github.com/murjax/burger_bot.git' }
     let(:name1) { 'spring_engine' }
     let(:name2) { 'burger_bot' }
-    let(:repo_info_url) { "https://api.github.com/users/#{username}/repos" }
+    let(:repo_info_url) { "https://api.github.com/users/#{username}/repos?page=#{page}" }
     let(:repo_info_uri) { URI(repo_info_url) }
     let(:serialized_response_body) { JSON.generate(response_body) }
     let(:response) { OpenStruct.new(code: code, body: serialized_response_body) }
 
-    subject(:call) { described_class.new(username).call }
+    subject(:call) { described_class.new(username, page).call }
 
     context 'valid username with repos' do
       let(:response_body) do
@@ -30,9 +31,9 @@ RSpec.describe CloneHandler do
 
       it 'runs clone commands' do
         expect(Net::HTTP).to receive(:get_response).with(repo_info_uri).and_return(response)
-        expect(Kernel).to receive(:system).with(final_command)
+        expect(Kernel).to receive(:system).with(final_command).and_return(true)
 
-        call
+        expect(call).to eq(true)
       end
     end
 
@@ -44,7 +45,7 @@ RSpec.describe CloneHandler do
         expect(Net::HTTP).to receive(:get_response).with(repo_info_uri).and_return(response)
         expect(Kernel).not_to receive(:system)
 
-        call
+        expect(call).to eq(false)
       end
     end
 
@@ -56,7 +57,7 @@ RSpec.describe CloneHandler do
         expect(Net::HTTP).to receive(:get_response).with(repo_info_uri).and_return(response)
         expect(Kernel).not_to receive(:system)
 
-        call
+        expect(call).to eq(false)
       end
     end
 
@@ -67,7 +68,7 @@ RSpec.describe CloneHandler do
         expect(Net::HTTP).not_to receive(:get_response)
         expect(Kernel).not_to receive(:system)
 
-        call
+        expect(call).to eq(false)
       end
     end
 
@@ -78,7 +79,7 @@ RSpec.describe CloneHandler do
         expect(Net::HTTP).not_to receive(:get_response)
         expect(Kernel).not_to receive(:system)
 
-        call
+        expect(call).to eq(false)
       end
     end
   end

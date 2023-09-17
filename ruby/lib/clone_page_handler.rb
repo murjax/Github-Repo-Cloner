@@ -1,23 +1,24 @@
 require 'json'
 require 'net/http'
 
-class CloneHandler
-  def initialize(username)
+class ClonePageHandler
+  def initialize(username, page)
     @username = username
+    @page = page
   end
 
   def call
-    return unless clonable?
+    return false unless clonable?
 
     Kernel.system(clone_command)
   end
 
   private
 
-  attr_reader :username
+  attr_reader :username, :page
 
   def info_uri
-    URI("https://api.github.com/users/#{username}/repos")
+    URI("https://api.github.com/users/#{username}/repos?page=#{page}")
   end
 
   def response
