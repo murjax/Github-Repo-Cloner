@@ -7,6 +7,8 @@ RSpec.describe CloneHandler do
     let(:username) { 'murjax' }
     let(:clone_url1) { 'https://github.com/murjax/spring_engine.git' }
     let(:clone_url2) { 'https://github.com/murjax/burger_bot.git' }
+    let(:name1) { 'spring_engine' }
+    let(:name2) { 'burger_bot' }
     let(:repo_info_url) { "https://api.github.com/users/#{username}/repos" }
     let(:repo_info_uri) { URI(repo_info_url) }
     let(:serialized_response_body) { JSON.generate(response_body) }
@@ -15,10 +17,15 @@ RSpec.describe CloneHandler do
     subject(:call) { described_class.new(username).call }
 
     context 'valid username with repos' do
-      let(:response_body) { [{ 'clone_url' => clone_url1 }, { 'clone_url' => clone_url2 }] }
+      let(:response_body) do
+        [
+          { 'name' => name1, 'clone_url' => clone_url1 },
+          { 'name' => name2, 'clone_url' => clone_url2 }
+        ]
+      end
       let(:code) { '200' }
-      let(:command1) { "git clone #{clone_url1}" }
-      let(:command2) { "git clone #{clone_url2}" }
+      let(:command1) { "git clone #{clone_url1} #{username}/#{name1}" }
+      let(:command2) { "git clone #{clone_url2} #{username}/#{name2}" }
       let(:final_command) { "#{command1} & #{command2}" }
 
       it 'runs clone commands' do

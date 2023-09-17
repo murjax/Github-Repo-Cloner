@@ -33,7 +33,9 @@ class CloneHandler
   end
 
   def clone_command
-    @clone_command ||= response_body&.map { |info| "git clone #{info['clone_url']}" }&.join(' & ')
+    @clone_command ||= response_body&.map do |info|
+      "git clone #{info['clone_url']} #{username}/#{info['name']}"
+    end&.join(' & ')
   end
 
   def clonable?
