@@ -2,6 +2,9 @@
 
 Clone any user's public repositories concurrently.
 
+## Screenshot:
+<img width="694" alt="Screenshot 2023-09-16 at 2 44 28 PM" src="https://github.com/murjax/Github-Repo-Cloner/assets/11463275/57683c83-5440-4b0f-a45b-e3e18eb0255b">
+
 ### Requirements
 - This program was build using "GNU bash, version 3.2.57(1)-release (arm64-apple-darwin22)"
 - More information available at a later date.
