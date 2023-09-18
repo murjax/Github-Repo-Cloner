@@ -10,13 +10,14 @@ class TestCloneHandler(unittest.TestCase):
         repo_info_url = "https://api.github.com/users/" + username + "/repos"
         clone_url1 = 'https://github.com/murjax/spring_engine.git'
         clone_url2 = 'https://github.com/murjax/burger_bot.git'
-        command1 = 'git clone ' + clone_url1
-        command2 = 'git clone ' + clone_url2
-        commands = [command1, command2]
+        name1 = 'spring_engine'
+        name2 = 'burger_bot'
+        command1 = f'git clone {clone_url1} {username}/{name1}'
+        command2 = f'git clone {clone_url2} {username}/{name2}'
         final_command = command1 + ' & ' + command2
         expected_response = [
-            { 'clone_url': clone_url1 },
-            { 'clone_url': clone_url2 }
+            { 'name': name1, 'clone_url': clone_url1 },
+            { 'name': name2, 'clone_url': clone_url2 }
         ]
         mock_response = MagicMock()
         mock_response.status_code = 200
