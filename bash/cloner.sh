@@ -19,13 +19,13 @@ ask() {
   echo "You entered $account_name";
 }
 
-first() {
+make_folder () {
   mkdir $account_name &&
   cd $account_name &&
   echo
 }
 
-second () {
+clone_repos () {
   curl -s https://api.github.com/users/$account_name/repos | jq -c '.[]' |
 
   while read i;
@@ -46,5 +46,5 @@ second () {
   echo ;
 }
 
-ask && first && time second
+ask && make_folder && time clone_repos
 
