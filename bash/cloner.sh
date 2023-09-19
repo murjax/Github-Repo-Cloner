@@ -1,6 +1,6 @@
 ## Links
 
-# interogate json with jq
+# interrogate json with jq
 # https://stackoverflow.com/questions/33950596/iterating-through-json-array-in-shell-script
 # echo "$res" | jq -c -r '.[]' | while read item; do     val=$(jq -r '.value' <<< "$item")     echo "Value: $val" done
 
@@ -22,7 +22,7 @@
 
 ask () {
   if [ -n "$1" ]
-    then # non-null/non-zero string chcek ... aka exists!
+    then # non-null/non-zero string check ... aka exists!
       account_name="$1"
     else # No argument supplied 
       echo "Please enter account_name (user/organization name)";
@@ -40,7 +40,7 @@ make_folder () {
 
 check () {
   if [ -n "$1" ]
-    then # non-null/non-zero string chcek ... aka exists!
+    then # non-null/non-zero string check ... aka exists!
       echo "success"
       return 0; # return something similar to an exit code.
     else
@@ -51,15 +51,15 @@ check () {
 
 get_repos_by_page () {
   local page=$1;
-  # resons the curl request to the api can fail:
+  # reasons the curl request to the api can fail:
   # 1. api request limit exceeded, clone_url property will not exist.
   # 2. repository does not exist, clone url property will not exist.
-  local pagecontents=$(curl https://api.github.com/users/$account_name/repos?page=$page | jq -c '.[]' 2>/dev/null | jq -r '.clone_url' 2>/dev/null);
+  local page_contents=$(curl https://api.github.com/users/$account_name/repos?page=$page | jq -c '.[]' 2>/dev/null | jq -r '.clone_url' 2>/dev/null);
 
-  # echo $pagecontents;
-  check $pagecontents &&
+  # echo $page_contents;
+  check $page_contents &&
   {
-    for url in ${pagecontents}; do
+    for url in ${page_contents}; do
       # echo "$url";
       # git clone does not have a rate limiting that I am aware of.
       (git clone -q $url) &> /dev/null &
