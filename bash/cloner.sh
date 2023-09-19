@@ -25,24 +25,37 @@ make_folder () {
   echo
 }
 
+check () {
+  if [ -n "$1" ]; then # non-null/non-zero string chcek ... aka exists!
+      echo "success"
+      return 0; # return something similar to an exit code.
+    else
+      echo "error"
+      return 1; # return something similar to an exit code.
+  fi
+}
+
+
 clone_repos () {
   local pagecontents=$(curl -s https://api.github.com/users/$account_name/repos | jq -c '.[]' 2>/dev/null | jq -r '.clone_url' 2>/dev/null)
-  echo $pagecontents
-  for url in ${pagecontents}; do
-    echo "$url"
-    # (git clone -q $url) &> /dev/null &
-  done
+  check $pagecontents &&
+  {
+    for url in ${pagecontents}; do
+      echo "$url"
+      # (git clone -q $url) &> /dev/null &
+    done
 
-  echo -n loading;
+    echo -n loading;
 
-  while
-    echo -n .;
-    ps e | grep -v grep | grep git > /dev/null;
-  do
-    sleep 1;
-  done;
+    while
+      echo -n .;
+      ps e | grep -v grep | grep git > /dev/null;
+    do
+      sleep 1;
+    done;
 
-  echo ;
+    echo ;
+  }
 }
 
 ask && make_folder && time clone_repos
