@@ -12,11 +12,16 @@
 # https://unix.stackexchange.com/a/461813/188491
 # main () { echo running ... }; time main
 
-ask() {
-  echo "Please enter account_name (user/organization name)";
-  read account_name;
-  echo ;
-  echo "You entered $account_name";
+ask () {
+  if [ -n "$1" ]
+    then # non-null/non-zero string chcek ... aka exists!
+      account_name="$1"
+    else # No argument supplied 
+      echo "Please enter account_name (user/organization name)";
+      read account_name;
+      echo ;
+      echo "You entered $account_name";
+  fi 
 }
 
 make_folder () {
@@ -26,7 +31,8 @@ make_folder () {
 }
 
 check () {
-  if [ -n "$1" ]; then # non-null/non-zero string chcek ... aka exists!
+  if [ -n "$1" ]
+    then # non-null/non-zero string chcek ... aka exists!
       echo "success"
       return 0; # return something similar to an exit code.
     else
@@ -58,5 +64,7 @@ clone_repos () {
   }
 }
 
-ask && make_folder && time clone_repos
+# Provide a username when running the script to bypass the ask prompt.
+# example: rm -rf  murjax/; bash bash/cloner.sh murjax
+ask "$@" && make_folder && time clone_repos
 
