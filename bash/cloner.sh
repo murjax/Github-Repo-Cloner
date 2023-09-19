@@ -60,7 +60,8 @@ get_repos_by_page () {
   check $page_contents &&
   {
     for url in ${page_contents}; do
-      # echo "$url";
+      echo "$url";
+
       # git clone does not have a rate limiting that I am aware of.
       (git clone -q $url) &> /dev/null &
     done
