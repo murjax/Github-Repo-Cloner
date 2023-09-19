@@ -28,7 +28,10 @@ make_folder () {
 clone_repos () {
   local pagecontents=$(curl -s https://api.github.com/users/$account_name/repos | jq -c '.[]' | jq -r '.clone_url')
   echo $pagecontents
-  # (git clone -q $pagecontents) &> /dev/null & 
+  for url in ${pagecontents}; do
+    echo "$url"
+    # (git clone -q $url) &> /dev/null &
+  done
 
   echo -n loading;
 
