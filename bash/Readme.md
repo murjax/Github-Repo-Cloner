@@ -17,6 +17,9 @@ Clone any user's public repositories concurrently.
 2. Enter account name when prompted
 3. Enjoy!
 
+### Run the script with 1 command line argument
+1. Run the script `rm -rf  murjax/; bash cloner.sh murjax`
+
 ### Links for learning
 > Interogate json with jq  
 > https://stackoverflow.com/questions/33950596/iterating-through-json-array-in-shell-script  
