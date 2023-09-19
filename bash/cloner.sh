@@ -26,7 +26,7 @@ make_folder () {
 }
 
 clone_repos () {
-  local pagecontents=$(curl -s https://api.github.com/users/$account_name/repos | jq -c '.[]' | jq -r '.clone_url')
+  local pagecontents=$(curl -s https://api.github.com/users/$account_name/repos | jq -c '.[]' 2>/dev/null | jq -r '.clone_url' 2>/dev/null)
   echo $pagecontents
   for url in ${pagecontents}; do
     echo "$url"
