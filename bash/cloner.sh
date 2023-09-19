@@ -12,6 +12,14 @@
 # https://unix.stackexchange.com/a/461813/188491
 # main () { echo running ... }; time main
 
+# Check for non-null/non-zero string variable
+# https://stackoverflow.com/a/3601734/5283424
+# `if [ -n "$1" ]`
+
+# Return an exit code
+# https://superuser.com/a/371539/644627
+# `return 1`
+
 ask () {
   if [ -n "$1" ]
     then # non-null/non-zero string chcek ... aka exists!
