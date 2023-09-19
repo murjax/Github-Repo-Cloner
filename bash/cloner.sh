@@ -44,35 +44,48 @@ check () {
       echo "success"
       return 0; # return something similar to an exit code.
     else
-      echo "error"
+      # echo "error"
       return 1; # return something similar to an exit code.
   fi
 }
 
+get_repos_by_page () {
+  local page=$1;
+  # resons the curl request to the api can fail:
+  # 1. api request limit exceeded, clone_url property will not exist.
+  # 2. repository does not exist, clone url property will not exist.
+  local pagecontents=$(curl https://api.github.com/users/$account_name/repos?page=$page | jq -c '.[]' 2>/dev/null | jq -r '.clone_url' 2>/dev/null);
 
-clone_repos () {
-  local pagecontents=$(curl -s https://api.github.com/users/$account_name/repos | jq -c '.[]' 2>/dev/null | jq -r '.clone_url' 2>/dev/null)
+  # echo $pagecontents;
   check $pagecontents &&
   {
     for url in ${pagecontents}; do
-      echo "$url"
-      # (git clone -q $url) &> /dev/null &
+      # echo "$url";
+      # git clone does not have a rate limiting that I am aware of.
+      (git clone -q $url) &> /dev/null &
     done
-
-    echo -n loading;
-
-    while
-      echo -n .;
-      ps e | grep -v grep | grep git > /dev/null;
-    do
-      sleep 1;
-    done;
-
     echo ;
-  }
+
+    # recurse and go to the next page number until no repos come back. This might need a delay or sleep for large accounts.
+    get_repos_by_page $((page+1));
+  } || return 0;
+}
+
+clone_repos () {
+  get_repos_by_page 1;
+}
+
+wait_for_git () {
+  echo -n loading;
+  while
+    echo -n .;
+    ps e | grep -v grep | grep git > /dev/null;
+  do
+    sleep 1;
+  done;
 }
 
 # Provide a username when running the script to bypass the ask prompt.
 # example: rm -rf  murjax/; bash bash/cloner.sh murjax
-ask "$@" && make_folder && time clone_repos
+ask "$@" && make_folder && clone_repos && time wait_for_git
 
