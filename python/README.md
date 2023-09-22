@@ -11,4 +11,4 @@ Clone any user's public repositories concurrently.
 
 ### Usage
 1. Run script: `python3 github_repo_cloner/cloner.py <username>`
-2. Run tests: `python3 -m unittest tests/test_clone_handler.py`
+2. Run tests: `python3 -m unittest`

@@ -1,4 +1,4 @@
 import sys
-import clone_handler
+import clone_all_handler
 
-clone_handler.clone(sys.argv[1])
+clone_all_handler.clone_all(sys.argv[1])
