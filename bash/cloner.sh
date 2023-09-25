@@ -1,5 +1,12 @@
 ## Links
 
+# the art of http scripting blog post
+# https://curl.se/docs/httpscripting.html
+
+# parse http_status_code and http_body to two different variables
+# https://superuser.com/a/1805689/644627
+
+
 # interrogate json with jq
 # https://stackoverflow.com/questions/33950596/iterating-through-json-array-in-shell-script
 # echo "$res" | jq -c -r '.[]' | while read item; do     val=$(jq -r '.value' <<< "$item")     echo "Value: $val" done
@@ -49,6 +56,30 @@ check () {
   fi
 }
 
+get_body_from_api_or_handle_error () {
+  # Process substitution 
+  # The Bash syntax for writing to a process is >(command)
+  # The <(command) expression tells the command interpreter to run command and make its output appear as a file.
+
+  # adapted from: https://superuser.com/a/1805689/644627
+  body= ; http_status= ; name= ; page_content= ; URL= ;
+  URL=https://api.github.com/users/murjax/repos?page=1;
+  read_input_stream() {
+    # The read command is used to grab the document body from stdin by using the -u0 option to specify the input stream
+    read -r -d '' -u0 stdin;
+    printf "%s"  "$stdin";
+  }
+  
+  # IFS=$'\n' sets word splitting to only occur on new lines.
+  IFS=$'\n';
+  read -r -d '' http_status body < <(curl -s -w "%{http_code}\n" -o >(read_input_stream) $URL);
+
+  echo "$body";
+  echo $http_status;
+  unset read_input_stream;
+}
+
+
 get_repos_by_page () {
   local page=$1;
   # reasons the curl request to the api can fail:
@@ -86,7 +117,7 @@ wait_for_git () {
   done;
 }
 
+
 # Provide a username when running the script to bypass the ask prompt.
 # example: rm -rf  murjax/; bash bash/cloner.sh murjax
-ask "$@" && make_folder && clone_repos && time wait_for_git
-
+ask "$@" && make_folder && clone_repos && time wait_for_git && cd ..;

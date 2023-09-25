@@ -40,3 +40,10 @@ Clone any user's public repositories concurrently.
 > Return an exit code
 > https://superuser.com/a/371539/644627
 > `return 1`
+
+> The art of http scripting (a random blog post)
+> https://curl.se/docs/httpscripting.html
+
+> parse http_status_code and http_body to two different variables
+> https://superuser.com/a/1805689/644627
+
