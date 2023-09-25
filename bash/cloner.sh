@@ -76,6 +76,17 @@ get_body_from_api_or_handle_error () {
 
   echo "$body";
   echo $http_status;
+
+  # add http_status logic here
+  # 1. if valid send to parent function
+  # 2. if invalid inform the user 
+  # ------> error handling messages: 
+  # ---------- 1. api request limit exceeded, clone_url property will not exist.
+  # ---------- 2. repository does not exist, clone url property will not exist.
+  # ---------- 3. not connected to the internet. please check network connection.
+  # ---------- 4. unexpected http status code, $status_code $(echo body | head -n 1)
+  # ------> exit() with a code when an error occurs? Or just return empty, or return 1 and have parent program read it.?
+
   unset read_input_stream;
 }
 
