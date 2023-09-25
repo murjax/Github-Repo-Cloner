@@ -86,6 +86,7 @@ get_body_from_api_or_handle_error () {
   # ---------- 3. not connected to the internet. please check network connection.
   # ---------- 4. unexpected http status code, $status_code $(echo body | head -n 1)
   # ------> exit() with a code when an error occurs? Or just return empty, or return 1 and have parent program read it.?
+  # ------------ winner , return 0 like is currently being done by get_repos_by_page()
 
   unset read_input_stream;
 }
