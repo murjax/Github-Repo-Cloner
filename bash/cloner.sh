@@ -1,3 +1,5 @@
+#!/bin/bash
+
 ## Links
 
 # the art of http scripting blog post
@@ -27,16 +29,22 @@
 # https://superuser.com/a/371539/644627
 # `return 1`
 
+# Process substitution
+# The Bash syntax for writing to a process is >(command)
+# The <(command) expression tells the command interpreter to run command and make its output appear as a file.
+
+# IFS=$'\n' sets word splitting to only occur on new lines.
+
 ask () {
   if [ -n "$1" ]
     then # non-null/non-zero string check ... aka exists!
       account_name="$1"
-    else # No argument supplied 
+    else # No argument supplied
       echo "Please enter account_name (user/organization name)";
       read account_name;
       echo ;
       echo "You entered $account_name";
-  fi 
+  fi
 }
 
 make_folder () {
@@ -56,27 +64,7 @@ check () {
   fi
 }
 
-get_body_from_api_or_handle_error () {
-  # Process substitution 
-  # The Bash syntax for writing to a process is >(command)
-  # The <(command) expression tells the command interpreter to run command and make its output appear as a file.
-
-  # adapted from: https://superuser.com/a/1805689/644627
-  body= ; http_status= ; name= ; page_content= ; URL= ;
-  URL=https://api.github.com/users/murjax/repos?page=1;
-  read_input_stream() {
-    # The read command is used to grab the document body from stdin by using the -u0 option to specify the input stream
-    read -r -d '' -u0 stdin;
-    printf "%s"  "$stdin";
-  }
-  
-  # IFS=$'\n' sets word splitting to only occur on new lines.
-  IFS=$'\n';
-  read -r -d '' http_status body < <(curl -s -w "%{http_code}\n" -o >(read_input_stream) $URL);
-
-  echo "$body";
-  echo $http_status;
-
+handle_status_code () {
   # add http_status logic here
   # 1. if valid send to parent function
   # 2. if invalid inform the user 
@@ -88,9 +76,91 @@ get_body_from_api_or_handle_error () {
   # ------> exit() with a code when an error occurs? Or just return empty, or return 1 and have parent program read it.?
   # ------------ winner , return 0 like is currently being done by get_repos_by_page()
 
-  unset read_input_stream;
+  local http_status=$1
+  local http_body=$2
+
+  case $http_status in
+    200)
+      echo -n "Ok. HTTP Request was successful. Status code: $http_status";
+      return 0;
+      ;;
+    201)
+      echo -n "Created. HTTP Request was successful and, as a result, a new resource was created. Status code: $http_status";
+      return 0;
+      ;;
+    204)
+      echo -n "No Content. Server has fulfilled the request but does not need to return information. Status code: $http_status";
+      return 0;
+      ;;
+    304)
+      echo -n "Not Modified. Caching Resource: $http_status";
+      return 0;
+      ;;
+    400)
+      echo -n "Bad Request. Server cannot understand and process a request due to a client error. Status code: $http_status";
+      return 1;
+      ;;
+    401)
+      echo -n "Unauthorized. Status code: $http_status";
+      return 1;
+      ;;
+    402)
+      echo -n "Server/Api, Payment Required. Status code: $http_status";
+      return 1;
+      ;;
+    403)
+      echo -n "Forbidden. Status code: $http_status";
+      return 1;
+      ;;
+    404)
+      echo -n "Not Found. Status code: $http_status";
+      return 1;
+      ;;
+    409)
+      echo -n "Conflict. Status code: $http_status";
+      return 1;
+      ;;
+    410)
+      echo -n "Gone/Moved perminantly. Status code: $http_status";
+      return 1;
+      ;;
+    429)
+      echo -n "Too Many Requests. Status code: $http_status";
+      return 1;
+      ;;
+    500)
+      echo -n "Internal Server Error. Status code: $http_status";
+      return 1;
+      ;;
+    *)
+      echo "Unknown. Please open an issue describing the error code and first line in the response. $http_status";
+      echo $http_body | head -n 4;
+      return 1;
+      ;;
+  esac
 }
 
+
+read_input_stream() {
+  # The read command is used to grab the document body from stdin by using the -u0 option to specify the input stream
+  read -r -d '' -u0 stdin;
+  printf "%s"  "$stdin";
+}
+
+get_body_from_api_or_handle_error () {
+  local page=$1;
+  local URL=https://api.github.com/users/$account_name/repos?page=$page;
+
+  # get http_status and http_body from request.
+  IFS=$'\n'; read -r -d '' http_status http_body < <(curl -s -w "%{http_code}\n" -o >(read_input_stream) $URL);
+
+  handle_status_code $http_status $http_body || return 1; # return exits with a fail code if necessary.
+
+  local page_content=$(echo "$http_body" | jq -c '.[]' 2>/dev/null | jq -r '.clone_url' 2>/dev/null);
+  echo "$page_content";
+
+  unset read_input_stream;
+}
 
 get_repos_by_page () {
   local page=$1;
@@ -129,7 +199,9 @@ wait_for_git () {
   done;
 }
 
-
+# get_body_from_api_or_handle_error
 # Provide a username when running the script to bypass the ask prompt.
 # example: rm -rf  murjax/; bash bash/cloner.sh murjax
-ask "$@" && make_folder && clone_repos && time wait_for_git && cd ..;
+# ask "$@" && make_folder && clone_repos && time wait_for_git && cd ..;
+
+ask "$@" && make_folder && get_body_from_api_or_handle_error && time wait_for_git && cd ..;
