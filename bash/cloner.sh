@@ -164,13 +164,14 @@ get_body_from_api_or_handle_error () {
 
 get_repos_by_page () {
   local page=$1;
-  page_contents=$(get_body_from_api_or_handle_error $1) || {
-    echo $page_contents;
+  # page_content cannot use local because local returns a success status and we might need an error status. https://stackoverflow.com/a/62253721/5283424
+  page_content=$(get_body_from_api_or_handle_error $1) || {
+    echo $page_content;
     return 1;
   }
-  check $page_contents &&
+  check $page_content &&
   {
-    for url in ${page_contents}; do
+    for url in ${page_content}; do
       echo "$url";
 
       # git clone does not have a rate limiting that I am aware of.
@@ -181,7 +182,7 @@ get_repos_by_page () {
     # recurse and go to the next page number until no repos come back. This might need a delay or sleep for large accounts.
     get_repos_by_page $((page+1));
   } || return 0; # return success code regardless and let the program continue.
-  unset $page_contents
+  unset $page_content
 }
 
 clone_repos () {
