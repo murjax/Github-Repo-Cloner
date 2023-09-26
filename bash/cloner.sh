@@ -57,10 +57,10 @@ check () {
   if [ -n "$1" ]
     then # non-null/non-zero string check ... aka exists!
       echo "success"
-      return 0; # return something similar to an exit code.
+      return 0; # return success code.
     else
       # echo "error"
-      return 1; # return something similar to an exit code.
+      return 1; # return error code.
   fi
 }
 
@@ -81,61 +81,61 @@ handle_status_code () {
 
   case $http_status in
     200)
-      echo -n "Ok. HTTP Request was successful. Status code: $http_status";
-      return 0;
+      # echo -n "Ok. HTTP Request was successful. Status code: $http_status";
+      return 0; # return success code.
       ;;
     201)
       echo -n "Created. HTTP Request was successful and, as a result, a new resource was created. Status code: $http_status";
-      return 0;
+      return 0; # return success code.
       ;;
     204)
       echo -n "No Content. Server has fulfilled the request but does not need to return information. Status code: $http_status";
-      return 0;
+      return 0; # return success code.
       ;;
     304)
       echo -n "Not Modified. Caching Resource: $http_status";
-      return 0;
+      return 0; # return success code.
       ;;
     400)
       echo -n "Bad Request. Server cannot understand and process a request due to a client error. Status code: $http_status";
-      return 1;
+      exit 1; # return error code.
       ;;
     401)
       echo -n "Unauthorized. Status code: $http_status";
-      return 1;
+      exit 1; # return error code.
       ;;
     402)
       echo -n "Server/Api, Payment Required. Status code: $http_status";
-      return 1;
+      exit 1; # return error code.
       ;;
     403)
-      echo -n "Forbidden. Status code: $http_status";
-      return 1;
+      echo "Forbidden. Status code: $http_status";
+      exit 1; # return error code.
       ;;
     404)
       echo -n "Not Found. Status code: $http_status";
-      return 1;
+      exit 1; # return error code.
       ;;
     409)
       echo -n "Conflict. Status code: $http_status";
-      return 1;
+      exit 1; # return error code.
       ;;
     410)
       echo -n "Gone/Moved perminantly. Status code: $http_status";
-      return 1;
+      exit 1; # return error code.
       ;;
     429)
       echo -n "Too Many Requests. Status code: $http_status";
-      return 1;
+      exit 1; # return error code.
       ;;
     500)
       echo -n "Internal Server Error. Status code: $http_status";
-      return 1;
+      exit 1; # return error code.
       ;;
     *)
       echo "Unknown. Please open an issue describing the error code and first line in the response. $http_status";
       echo $http_body | head -n 4;
-      return 1;
+      exit 1; # return error code.
       ;;
   esac
 }
@@ -154,7 +154,7 @@ get_body_from_api_or_handle_error () {
   # get http_status and http_body from request.
   IFS=$'\n'; read -r -d '' http_status http_body < <(curl -s -w "%{http_code}\n" -o >(read_input_stream) $URL);
 
-  handle_status_code $http_status $http_body || return 1; # return exits with a fail code if necessary.
+  handle_status_code $http_status $http_body; # exits, if necessary.
 
   local page_content=$(echo "$http_body" | jq -c '.[]' 2>/dev/null | jq -r '.clone_url' 2>/dev/null);
   echo "$page_content";
@@ -164,12 +164,10 @@ get_body_from_api_or_handle_error () {
 
 get_repos_by_page () {
   local page=$1;
-  # reasons the curl request to the api can fail:
-  # 1. api request limit exceeded, clone_url property will not exist.
-  # 2. repository does not exist, clone url property will not exist.
-  local page_contents=$(curl https://api.github.com/users/$account_name/repos?page=$page | jq -c '.[]' 2>/dev/null | jq -r '.clone_url' 2>/dev/null);
-
-  # echo $page_contents;
+  page_contents=$(get_body_from_api_or_handle_error $1) || {
+    echo $page_contents;
+    return 1;
+  }
   check $page_contents &&
   {
     for url in ${page_contents}; do
@@ -182,7 +180,8 @@ get_repos_by_page () {
 
     # recurse and go to the next page number until no repos come back. This might need a delay or sleep for large accounts.
     get_repos_by_page $((page+1));
-  } || return 0;
+  } || return 0; # return success code regardless and let the program continue.
+  unset $page_contents
 }
 
 clone_repos () {
@@ -202,6 +201,5 @@ wait_for_git () {
 # get_body_from_api_or_handle_error
 # Provide a username when running the script to bypass the ask prompt.
 # example: rm -rf  murjax/; bash bash/cloner.sh murjax
-# ask "$@" && make_folder && clone_repos && time wait_for_git && cd ..;
+ask "$@" && make_folder && clone_repos && time wait_for_git && cd ..;
 
-ask "$@" && make_folder && get_body_from_api_or_handle_error && time wait_for_git && cd ..;
