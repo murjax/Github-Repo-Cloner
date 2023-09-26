@@ -109,10 +109,16 @@ handle_status_code () {
       echo "Caching Resource: $http_status" >&2;
       return 0; # return success code.
       ;;
+    000)
+      echo "Error, Status code: $http_status";
+      echo "Pro tip: you may not be connected to the internet";
+      return 1; # return error code.
+      ;;
     *)
       echo "Error, Status code: $http_status";
       echo "$http_body" | jq -r '.message' 2>/dev/null;
-      echo "$http_body" | jq -r '.documentation_url' 2>/dev/null;
+      echo "$http_body" | jq -r '.documentation_url' 2>/dev/null ||
+        echo "$http_body";
       return 1; # return error code.
       ;;
   esac
@@ -123,7 +129,7 @@ get_body_from_api_or_handle_error () {
   local URL=https://api.github.com/users/$account_name/repos?page=$page;
 
   # get http_status and http_body from request:
-  local response="$(curl -s -w "%{http_code}\n" $URL)";
+  local response="$(curl -sS -w "%{http_code}\n" $URL 2>&1)";
 
   local http_body="$(echo "$response" | sed '$d')";
   local http_status="$(echo "$response" | tail -n 1)";
