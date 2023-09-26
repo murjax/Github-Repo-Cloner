@@ -145,26 +145,22 @@ handle_status_code () {
   esac
 }
 
-
-read_input_stream() {
-  # The read command is used to grab the document body from stdin by using the -u0 option to specify the input stream
-  read -r -d '' -u0 stdin;
-  printf "%s"  "$stdin";
-}
-
 get_body_from_api_or_handle_error () {
   local page=$1;
   local URL=https://api.github.com/users/$account_name/repos?page=$page;
 
-  # get http_status and http_body from request.
-  IFS=$'\n'; read -r -d '' http_status http_body < <(curl -s -w "%{http_code}\n" -o >(read_input_stream) $URL);
+  # get http_status and http_body from request:
+  local response="$(curl -s -w "%{http_code}\n" $URL)";
 
-  handle_status_code $http_status $http_body; # exits, if necessary.
+  local http_body="$(echo "$response" | sed '$d')";
+  local http_status="$(echo "$response" | tail -n 1)";
 
+  # handle api request and exit if necessary:
+  handle_status_code $http_status $http_body;
+
+  # shrink page contents to only .clone_url
   local page_content=$(echo "$http_body" | jq -c '.[]' 2>/dev/null | jq -r '.clone_url' 2>/dev/null);
   echo "$page_content";
-
-  unset read_input_stream;
 }
 
 get_repos_by_page () {
