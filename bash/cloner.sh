@@ -162,6 +162,7 @@ get_repos_by_page () {
     # recurse and go to the next page number until no repos come back. This might need a delay or sleep for large accounts.
     get_repos_by_page $((page+1));
   } || return 0; # return success code regardless and let the program continue.
+  # if [ $page -eq 1 ]; then wait_for_git & fi; <- TODO, for starting the wait sooner.
   unset $page_content
 }
 
@@ -182,5 +183,5 @@ wait_for_git () {
 # get_body_from_api_or_handle_error
 # Provide a username when running the script to bypass the ask prompt.
 # example: rm -rf  murjax/; bash bash/cloner.sh murjax
-ask "$@" && make_folder && clone_repos && time wait_for_git && cd ..;
+time (ask "$@" && make_folder && clone_repos && wait_for_git && cd ..);
 
