@@ -116,7 +116,7 @@ handle_status_code () {
       ;;
     *)
       echo "Error, Status code: $http_status";
-      echo "$http_body" | jq -r '.message' 2>/dev/null;
+      echo "$http_body" | jq -r '.message' 2>/dev/null &&
       echo "$http_body" | jq -r '.documentation_url' 2>/dev/null ||
         echo "$http_body";
       return 1; # return error code.
