@@ -171,9 +171,9 @@ clone_repos () {
 }
 
 wait_for_git () {
-  echo -n loading;
+  echo -n loading 2>&1;
   while
-    echo -n .;
+    echo -n . 2>&1;
     ps e | grep -v grep | grep git > /dev/null;
   do
     sleep 1;
