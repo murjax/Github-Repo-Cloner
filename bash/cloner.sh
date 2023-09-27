@@ -40,6 +40,10 @@
 # Parse http_status_code and http_body to two different variables
 # https://superuser.com/a/1805689/644627
 
+# Prefer echoing to stderr instead of standout when logging. This helps you from polluting stdout which is used to send output to another program.
+# echo "I will show in your terminal but will not pollute $*" >&2;
+# Coffee Shop insight! From Trent!
+
 ask () {
   if [ -n "$1" ]
     then # non-null/non-zero string check ... aka exists!
@@ -61,7 +65,8 @@ make_folder () {
 check () {
   if [ -n "$1" ]
     then # non-null/non-zero string check ... aka exists!
-      echo "success"
+      echo "More Repos Found!"
+      echo ;
       return 0; # return success code.
     else
       # echo "error"
@@ -80,67 +85,41 @@ handle_status_code () {
   # ---------- 4. unexpected http status code, $status_code $(echo body | head -n 1)
   # ------> exit() with a code when an error occurs? Or just return empty, or return 1 and have parent program read it.?
   # ------------ winner , return 0 like is currently being done by get_repos_by_page()
-
-  local http_status=$1
-  local http_body=$2
+  local http_status="$1"
+  local http_body="$2"
 
   case $http_status in
     200)
-      # echo -n "Ok. HTTP Request was successful. Status code: $http_status";
+      echo "HTTP Request was successful." >&2;
+      echo "Status code: $http_status" >&2;
       return 0; # return success code.
       ;;
     201)
-      echo -n "Created. HTTP Request was successful and, as a result, a new resource was created. Status code: $http_status";
+      echo "Created. HTTP Request was successful and, as a result, a new resource was created." >&2;
+      echo "Status code: $http_status" >&2;
       return 0; # return success code.
       ;;
     204)
-      echo -n "No Content. Server has fulfilled the request but does not need to return information. Status code: $http_status";
+      echo "No Content. Server has fulfilled the request but does not need to return information." >&2;
+      echo "Status code: $http_status" >&2;
       return 0; # return success code.
       ;;
     304)
-      echo -n "Not Modified. Caching Resource: $http_status";
+      echo "Not Modified." >&2;
+      echo "Caching Resource: $http_status" >&2;
       return 0; # return success code.
       ;;
-    400)
-      echo -n "Bad Request. Server cannot understand and process a request due to a client error. Status code: $http_status";
-      exit 1; # return error code.
-      ;;
-    401)
-      echo -n "Unauthorized. Status code: $http_status";
-      exit 1; # return error code.
-      ;;
-    402)
-      echo -n "Server/Api, Payment Required. Status code: $http_status";
-      exit 1; # return error code.
-      ;;
-    403)
-      echo "Forbidden. Status code: $http_status";
-      exit 1; # return error code.
-      ;;
-    404)
-      echo -n "Not Found. Status code: $http_status";
-      exit 1; # return error code.
-      ;;
-    409)
-      echo -n "Conflict. Status code: $http_status";
-      exit 1; # return error code.
-      ;;
-    410)
-      echo -n "Gone/Moved perminantly. Status code: $http_status";
-      exit 1; # return error code.
-      ;;
-    429)
-      echo -n "Too Many Requests. Status code: $http_status";
-      exit 1; # return error code.
-      ;;
-    500)
-      echo -n "Internal Server Error. Status code: $http_status";
-      exit 1; # return error code.
+    000)
+      echo "Error, Status code: $http_status";
+      echo "Pro tip: you may not be connected to the internet";
+      return 1; # return error code.
       ;;
     *)
-      echo "Unknown. Please open an issue describing the error code and first line in the response. $http_status";
-      echo $http_body | head -n 4;
-      exit 1; # return error code.
+      echo "Error, Status code: $http_status";
+      echo "$http_body" | jq -r '.message' 2>/dev/null &&
+      echo "$http_body" | jq -r '.documentation_url' 2>/dev/null ||
+        echo "$http_body";
+      return 1; # return error code.
       ;;
   esac
 }
@@ -150,13 +129,13 @@ get_body_from_api_or_handle_error () {
   local URL=https://api.github.com/users/$account_name/repos?page=$page;
 
   # get http_status and http_body from request:
-  local response="$(curl -s -w "%{http_code}\n" $URL)";
+  local response="$(curl -sS -w "%{http_code}\n" $URL 2>&1)";
 
   local http_body="$(echo "$response" | sed '$d')";
   local http_status="$(echo "$response" | tail -n 1)";
 
   # handle api request and exit if necessary:
-  handle_status_code $http_status $http_body;
+  handle_status_code $http_status "$http_body" || return 1;
 
   # shrink page contents to only .clone_url
   local page_content=$(echo "$http_body" | jq -c '.[]' 2>/dev/null | jq -r '.clone_url' 2>/dev/null);
@@ -165,14 +144,15 @@ get_body_from_api_or_handle_error () {
 
 get_repos_by_page () {
   local page=$1;
-  # page_content cannot use local because local returns a success status and we might need an error status. https://stackoverflow.com/a/62253721/5283424
-  page_content=$(get_body_from_api_or_handle_error $1) || {
-    echo $page_content;
+  # page_content cannot use the local keyword because local returns a success status and we might need an error status. https://stackoverflow.com/a/62253721/5283424
+  page_content="$(get_body_from_api_or_handle_error $1)" || {
+    echo "$page_content";
     return 1;
   }
-  check $page_content &&
+  local new_content="$page_content"
+  check $new_content &&
   {
-    for url in ${page_content}; do
+    for url in ${new_content}; do
       echo "$url";
 
       # git clone does not have a rate limiting that I am aware of.
@@ -183,6 +163,7 @@ get_repos_by_page () {
     # recurse and go to the next page number until no repos come back. This might need a delay or sleep for large accounts.
     get_repos_by_page $((page+1));
   } || return 0; # return success code regardless and let the program continue.
+  # if [ $page -eq 1 ]; then wait_for_git & fi; <- TODO, for starting the wait sooner.
   unset $page_content
 }
 
@@ -191,9 +172,9 @@ clone_repos () {
 }
 
 wait_for_git () {
-  echo -n loading;
+  echo -n loading 2>&1;
   while
-    echo -n .;
+    echo -n . 2>&1;
     ps e | grep -v grep | grep git > /dev/null;
   do
     sleep 1;
@@ -203,5 +184,5 @@ wait_for_git () {
 # get_body_from_api_or_handle_error
 # Provide a username when running the script to bypass the ask prompt.
 # example: rm -rf  murjax/; bash bash/cloner.sh murjax
-ask "$@" && make_folder && clone_repos && time wait_for_git && cd ..;
+time (ask "$@" && make_folder && clone_repos && wait_for_git && cd ..);
 

@@ -58,3 +58,7 @@ Clone any user's public repositories concurrently.
 
 > Parse http_status_code and http_body to two different variables
 > https://superuser.com/a/1805689/644627
+
+> Prefer echoing to stderr instead of standout when logging. This helps you from polluting stdout which is used to send output to another program.
+> echo "I will show in your terminal but will not pollute $*" >&2;
+> Coffee Shop insight! From Trent!
