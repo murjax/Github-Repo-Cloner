@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+
+require_relative '../lib/clone_handler'
+
+username = ARGV.first || CloneHandler.get_username
+CloneHandler.new(username).clone_all
