@@ -7,9 +7,14 @@ defmodule GithubRepoCloner.ClonerTest do
     username = "murjax"
     clone_url1 = "https://github.com/murjax/spring_engine.git"
     clone_url2 = "https://github.com/murjax/burger_bot.git"
-    repo_info = [%{"clone_url" => clone_url1}, %{"clone_url" => clone_url2}]
-    command1 = "git clone #{clone_url1}"
-    command2 = "git clone #{clone_url2}"
+    name1 = "spring_engine"
+    name2 = "burger_bot"
+    repo_info = [
+      %{"name" => name1, "clone_url" => clone_url1},
+      %{"name" => name2, "clone_url" => clone_url2}
+    ]
+    command1 = "git clone #{clone_url1} #{username}/#{name1}"
+    command2 = "git clone #{clone_url2} #{username}/#{name2}"
     final_command = "#{command1} & #{command2}"
     expected_result = {:ok, "Command executed: #{final_command}"}
 
