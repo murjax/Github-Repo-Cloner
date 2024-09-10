@@ -126,7 +126,8 @@ handle_status_code () {
 
 get_body_from_api_or_handle_error () {
   local page=$1;
-  local URL=https://api.github.com/users/$account_name/repos?page=$page;
+  local URL=https://api.github.com/users/$account_name/gists?page=$page;
+  # local URL=https://api.github.com/users/$account_name/repos?page=$page;
 
   # get http_status and http_body from request:
   local response="$(curl -sS -w "%{http_code}\n" $URL 2>&1)";
@@ -138,7 +139,8 @@ get_body_from_api_or_handle_error () {
   handle_status_code $http_status "$http_body" || return 1;
 
   # shrink page contents to only .clone_url
-  local page_content=$(echo "$http_body" | jq -c '.[]' 2>/dev/null | jq -r '.clone_url' 2>/dev/null);
+  local page_content=$(echo "$http_body" | jq -c '.[]' 2>/dev/null | jq -r '.git_pull_url' 2>/dev/null);
+  # local page_content=$(echo "$http_body" | jq -c '.[]' 2>/dev/null | jq -r '.clone_url' 2>/dev/null);
   echo "$page_content";
 }
 
