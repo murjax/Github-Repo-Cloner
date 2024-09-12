@@ -8,7 +8,7 @@ defmodule GithubRepoCloner.Cloner do
     username
     |> request_repo_info
     |> parse_response
-    |> clone_repos
+    |> clone_repos(username)
   end
 
   def clone, do: true
@@ -23,9 +23,9 @@ defmodule GithubRepoCloner.Cloner do
 
   defp parse_response({:ok, %Tesla.Env{status: _}}), do: []
 
-  defp clone_repos(repo_info) do
+  defp clone_repos(repo_info, username) do
     repo_info
-    |> Enum.map(fn(item) -> "git clone #{item["clone_url"]}" end)
+    |> Enum.map(fn(%{"clone_url" => clone_url, "name" => name}) -> "git clone #{clone_url} #{username}/#{name}" end)
     |> Enum.join(" & ")
     |> run_command
   end
